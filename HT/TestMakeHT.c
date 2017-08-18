@@ -3,7 +3,7 @@
 
 #include "MakeHT.h"
 
-void WriteLinkMapHT(uint10_t rgnET[NCrts*NCrds*NRgns], uint10_t hfET[NCrts*NHFRgns], uint10_t HT[1]) {
+void WriteLinkMapHT(uint10_t rgnET[NCrts*NCrds*NRgns], uint10_t hfET[NCrts*NHFRgns], uint10_t HT[3]) {
   // This code is to write suitable mapping of inputs to signals in the CTP7_HLS project from Ales
   // Block 1 of User Code
   int iRgn, iHFRgn, link, loBit, hiBit;
@@ -50,6 +50,45 @@ void WriteLinkMapHT(uint10_t rgnET[NCrts*NCrds*NRgns], uint10_t hfET[NCrts*NHFRg
   printf("s_OUTPUT_LINK_ARR( 0 )(15 downto 0) <= HT_0;\n");
   printf("s_OUTPUT_LINK_ARR( 0 )(31 downto 16) <= HT_1;\n");
   printf("s_OUTPUT_LINK_ARR( 0 )(47 downto 32) <= HT_2;\n");
+}
+
+void writeOutputFile(uint10_t HT[3]){
+  FILE *f1;
+  int i,j;
+  int count;
+
+  f1 = fopen("output.txt","w");
+
+  if( f1 == NULL){
+    printf("\n Error opening output file"); 
+    
+  }
+
+  // Write header
+  for (i=0; i < 679; i++) fprintf(f1,"=");
+  fprintf(f1,"\nOutput ");
+  for (i=0; i < 48; i++)  fprintf(f1,"       LINK_%02d",i);
+  fprintf(f1,"\n");
+  for (i=0; i < 679; i++) fprintf(f1,"=");
+  
+  
+  for(count=0; count < 1024; count ++)
+    {
+      fprintf(f1,"\n0x%05X", count);
+      for(i=0; i< 48; i++)
+	{
+	  if(count == 0 && i == 0)
+	    fprintf(f1,"    0x%04X%04X", HT[1], HT[0]);
+	  if(count == 1 && i == 0)
+	    fprintf(f1,"    0x%08X", HT[2]);
+	  else
+	    fprintf(f1,"    0x00000000");
+	}
+      
+   
+    } 
+
+
 }
 
 int main(int argc, char **argv) {
@@ -114,6 +153,8 @@ int main(int argc, char **argv) {
     return 1;
   }
   else printf("Test succeeded\n");
+
+  writeOutputFile(hlsHT);
 
   WriteLinkMapHT(rgnET, hfET, hlsHT);
 
