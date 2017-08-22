@@ -1,9 +1,11 @@
+#include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 #include <stdio.h>
 
 #include "MakeHT.h"
 
-void WriteLinkMapHT(uint10_t rgnET[NCrts*NCrds*NRgns], uint10_t hfET[NCrts*NHFRgns], uint10_t HT[3]) {
+void writeLinkMapHT(uint10_t rgnET[NCrts*NCrds*NRgns], uint10_t hfET[NCrts*NHFRgns], uint10_t HT[3]) {
   // This code is to write suitable mapping of inputs to signals in the CTP7_HLS project from Ales
   // Block 1 of User Code
   int iRgn, iHFRgn, link, loBit, hiBit;
@@ -52,43 +54,228 @@ void WriteLinkMapHT(uint10_t rgnET[NCrts*NCrds*NRgns], uint10_t hfET[NCrts*NHFRg
   printf("s_OUTPUT_LINK_ARR( 0 )(47 downto 32) <= HT_2;\n");
 }
 
-void writeOutputFile(uint10_t HT[3]){
-  FILE *f1;
+void writeInputFile(uint10_t rgnET[NCrts*NCrds*NRgns], uint10_t hfET[NCrts*NHFRgns], bool last = false) {
+  static bool first = true;
+  static int count = 0;
+  static FILE *f1;
   int i,j;
-  int count;
+  int iRgn, iHFRgn;
+  uint10_t item0 = 0;
+  uint10_t item1 = 0;
+  if(first) {
+    first = false;
+    f1 = fopen("input_link_data.txt","w");
+    if( f1 == NULL){
+      printf("\n Error opening input file");
+    }
+    // Write header
+    for (i=0; i < 945; i++)fprintf(f1,"=");
+    fprintf(f1,"\nInput ");
+    for (i=0; i < 67; i++) fprintf(f1,"       LINK_%02d",i);
+    fprintf(f1,"\n");
+    for (i=0; i < 945; i++) fprintf(f1,"=");
+  }
+  for(j = 0; j < 6 && count < 1024; j++, count++) {
+    fprintf(f1,"\n0x%05X", count);
+    for(i=0; i< 67; i++) {
+      item0 = 0;
+      item1 = 0;
+      if(i < 21) {
+	iRgn = i * 12 + j * 2;
+	if(iRgn < NCrts * NCrds * NRgns) {
+	  item0 = rgnET[iRgn];
+	  item1 = rgnET[iRgn + 1];
+	}
+      }
+      else if(i < 33) {
+	iHFRgn = i * 12 + j * 2;
+	if(iHFRgn < NCrts * NHFRgns) {
+	  item0 = hfET[iHFRgn];
+	  item1 = hfET[iHFRgn + 1];
+	}
+      }
+      fprintf(f1,"    0x%04X%04X", item1, item0);
+    }
+  }
+  if(last || count > 1017) {
+    for(; count < 1024; count++) {
+      fprintf(f1,"\n0x%05X", count);
+      for(i=0; i< 67; i++) {
+	fprintf(f1,"    0x00000000");
+      }
+    }
+  }
+}
 
-  f1 = fopen("output.txt","w");
+void writeOutputFile(uint10_t HT[3], bool last = false) {
 
-  if( f1 == NULL){
-    printf("\n Error opening output file"); 
-    
+  static bool first = true;
+  static int count = 0;
+  static FILE *f1;
+
+  int i,j;
+
+  if(first) {
+    first = false;
+    f1 = fopen("output_link_data.txt","w");
+    if( f1 == NULL){
+      printf("\n Error opening output file");
+    }
+    // Write header
+    for (i=0; i < 679; i++) fprintf(f1,"=");
+    fprintf(f1,"\nOutput ");
+    for (i=0; i < 48; i++)  fprintf(f1,"       LINK_%02d",i);
+    fprintf(f1,"\n");
+    for (i=0; i < 679; i++) fprintf(f1,"=");
   }
 
-  // Write header
-  for (i=0; i < 679; i++) fprintf(f1,"=");
-  fprintf(f1,"\nOutput ");
-  for (i=0; i < 48; i++)  fprintf(f1,"       LINK_%02d",i);
-  fprintf(f1,"\n");
-  for (i=0; i < 679; i++) fprintf(f1,"=");
-  
-  
-  for(count=0; count < 1024; count ++)
-    {
+  // Pack the three 16-bit outputs in link number 0 bits 0-15, 16-31 and 32-47
+  for(j = 0; j < 6 && count < 1024; j++, count++) {
+    fprintf(f1,"\n0x%05X", count);
+    for(i=0; i< 48; i++)
+      {
+	if(j == 0 && i == 0)
+	  fprintf(f1,"    0x%04X%04X", HT[1], HT[0]);
+	if(j == 1 && i == 0)
+	  fprintf(f1,"    0x%08X", HT[2]);
+	else
+	  fprintf(f1,"    0x00000000");
+      }
+  }
+
+  // Fill in zeros for the rest, when last event is reached
+  if(last || count > 1017) {
+    for(; count < 1024; count++) {
       fprintf(f1,"\n0x%05X", count);
-      for(i=0; i< 48; i++)
-	{
-	  if(count == 0 && i == 0)
-	    fprintf(f1,"    0x%04X%04X", HT[1], HT[0]);
-	  if(count == 1 && i == 0)
-	    fprintf(f1,"    0x%08X", HT[2]);
-	  else
-	    fprintf(f1,"    0x00000000");
+      for(i=0; i< 48; i++) {
+	fprintf(f1,"    0x00000000");
+      }
+    }
+  }
+
+}
+
+void makeTestData(int argc, char** argv, uint10_t rgnET[NCrts*NCrds*NRgns], uint10_t hfET[NCrts*NHFRgns]) {
+  static FILE *f1;
+  static bool first = true;
+  uint32_t count;
+  int i,j;
+  int iRgn, iHFRgn;
+  uint10_t item0 = 0;
+  uint10_t item1 = 0;
+  uint32_t value = 0;
+  char junk[1024];
+  char pattern[64];
+  if(argc >= 2) {
+    strncpy(pattern, argv[1], 64);
+  }
+  else {
+    strcpy(pattern, "--default");
+  }
+  if(strncmp(pattern, "--random", strlen(pattern)) == 0) {
+    for(iRgn = 0; iRgn < NCrts * NCrds * NRgns; iRgn++) {
+      rgnET[iRgn] = rand() & 0x7F;
+    }
+    for(iHFRgn = 0; iHFRgn < NCrts * NHFRgns; iHFRgn++) {
+      hfET[iHFRgn] = rand() & 0x7F;
+    }
+  }
+  else if(strncmp(pattern, "--increasing", strlen(pattern)) == 0) {
+    value = 0;
+    for(iRgn = 0; iRgn < NCrts * NCrds * NRgns; iRgn++) {
+      rgnET[iRgn] = value++;
+    }
+    value = 0;
+    for(iHFRgn = 0; iHFRgn < NCrts * NHFRgns; iHFRgn++) {
+      hfET[iHFRgn] = value++;
+    }
+  }
+  else if(strncmp(pattern, "--decreasing", strlen(pattern)) == 0) {
+    value = NCrts * NCrds * NRgns;
+    for(iRgn = 0; iRgn < NCrts * NCrds * NRgns; iRgn++) {
+      rgnET[iRgn] = value--;
+    }
+    value = NCrts * NHFRgns;
+    for(iHFRgn = 0; iHFRgn < NCrts * NHFRgns; iHFRgn++) {
+      hfET[iHFRgn] = value--;
+    }
+  }
+  else if(strncmp(pattern, "--constant", strlen(pattern)) == 0) {
+    value = 0;
+    if(argc == 3) value = atoi(argv[2]);
+    for(iRgn = 0; iRgn < NCrts * NCrds * NRgns; iRgn++) {
+      rgnET[iRgn] = value;
+    }
+    for(iHFRgn = 0; iHFRgn < NCrts * NHFRgns; iHFRgn++) {
+      hfET[iHFRgn] = value;
+    }
+  }
+  else if(strncmp(pattern, "--fileinput", strlen(pattern)) == 0) {
+    if(first) {
+      first = false;
+      // Open file
+      if(argc == 3) f1 = fopen(argv[2], "r");
+      else f1 = fopen("fileinput.txt", "r");
+      printf("opened the input file\n");
+      // Skip three header lines
+      for(i = 0; i < 3; i++) {
+	if(fgets(junk, sizeof(junk), f1) == NULL) {
+	  fprintf(stderr, "Aborting due to bad format of the input file header\n");
+	  exit(1);
 	}
-      
-   
-    } 
-
-
+      }
+    }
+    for(j = 0; j < 6; j++) {
+      if(fscanf(f1, "%X", &count) == 1) {
+	if(j != (count % 6)) {
+	  fprintf(stderr, "Read error~?!\n");
+	  exit(2);
+	}
+	for(i = 0; i < 67; i++) {
+	  if(fscanf(f1, "%X", &value) == 1) {
+	    item0 = value & 0xFFFF;
+	    item1 = value >> 16;
+	    if(i < 21) {
+	      iRgn = i * 12 + j * 2;
+	      printf("%d ", iRgn);
+	      printf("%X ", value);
+	      printf("%hX ", item0);
+	      printf("%hX\n", item1);
+	      if(iRgn < NCrts * NCrds * NRgns) {
+		rgnET[iRgn] = item0;
+		rgnET[iRgn + 1] = item1;
+	      }
+	    }
+	    else if(i < 33) {
+	      iHFRgn = i * 12 + j * 2;
+	      if(iHFRgn < NCrts * NHFRgns) {
+		hfET[iHFRgn] = item0;
+		hfET[iHFRgn + 1] = item1;
+	      }
+	    }
+	  }
+	  else {
+	    fprintf(stderr, "Error reading value\n");
+	    exit(1);
+	  }
+	}
+      }
+      else {
+	fprintf(stderr, "Error reading count\n");
+	exit(1);
+      }
+    }
+  }
+  else {
+    // Default test data; Construct it using indices for the fun of it!
+    for(iRgn = 0; iRgn < NCrts * NCrds * NRgns; iRgn++) {
+      rgnET[iRgn] = iRgn / 2;
+    }
+    for(iHFRgn = 0; iHFRgn < NCrts * NHFRgns; iHFRgn++) {
+      hfET[iHFRgn] = iHFRgn;
+    }
+  }
+  return;
 }
 
 int main(int argc, char **argv) {
@@ -109,55 +296,66 @@ int main(int argc, char **argv) {
   int i;
   int j;
   int iHFRgn;
+  int event = 0;
 
-  // Test data; Construct it using indices for the fun of it
+  bool last = false;
+
+  // Event loop - 170 events maximum can be written out
+
+  for(event = 0; event < 170; event++) {
+    
+    // Mark last event
+    if(event == 169) last = true;
+
+    // Make test data
+
+    makeTestData(argc, argv, rgnET, hfET);
+
+    // Determine HT using software
+    
+    rgnHT = 0;
+    for(iRgn = 0; iRgn < NCrts * NCrds * NRgns; iRgn++) {
+      j = (iRgn % (NCrds*NRgns));
+      et = rgnETLUT[rgnET[iRgn]][j];
+      if(et > MinETCutForHT) rgnHT += et;
+      if(rgnHT > 0xFFFF) rgnHT = 0xFFFF;
+    }
+    hfHT = 0;
+    for(iHFRgn = 0; iHFRgn < NCrts * NHFRgns; iHFRgn++) {
+      j = (iHFRgn % (NHFRgns));
+      et = hfETLUT[hfET[iHFRgn]][j];
+      if(et > MinHFETCutForHT) hfHT += et;
+      if(hfHT > 0xFFFF) hfHT = 0xFFFF;
+    }
+    sum = rgnHT + hfHT;
+    if(sum > 0xFFFF) sum = 0xFFFF;
+    HT[0] = (uint10_t) sum;
+    HT[1] = (uint10_t) rgnHT;
+    HT[2] = (uint10_t) hfHT;
+    
+    // Determine HT using hardware simulation
+    
+    MakeHT(rgnET, hfET, hlsHT);
+    
+    // Compare
+    
+    printf("C says: HT = %d; HLS says: HT = %d\n", HT[0], hlsHT[0]);
+    printf("C says: rgnHT = %d; HLS says: rgnHT = %d\n", HT[1], hlsHT[1]);
+    printf("C says: hfHT = %d; HLS says: hfHT = %d\n", HT[2], hlsHT[2]);
+    if(HT[0] != hlsHT[0]) {
+      printf("Test failed\n");
+      return 1;
+    }
+
+    // Save input and output
+    writeInputFile(rgnET, hfET, last);
+    writeOutputFile(hlsHT, last);
+
+  }
+    
+  printf("Test succeeded\n");
+  writeLinkMapHT(rgnET, hfET, hlsHT);
   
-  for(iRgn = 0; iRgn < NCrts * NCrds * NRgns; iRgn++) {
-    rgnET[iRgn] = iRgn / 2;
-  }
-  for(iHFRgn = 0; iHFRgn < NCrts * NHFRgns; iHFRgn++) {
-    hfET[iHFRgn] = iHFRgn;
-  }
-
-  // Determine HT using software
-
-  for(iRgn = 0; iRgn < NCrts * NCrds * NRgns; iRgn++) {
-    j = (iRgn % (NCrds*NRgns));
-    et = rgnETLUT[rgnET[iRgn]][j];
-    if(et > MinETCutForHT) rgnHT += et;
-    if(rgnHT > 0xFFFF) rgnHT = 0xFFFF;
-  }
-  for(iHFRgn = 0; iHFRgn < NCrts * NHFRgns; iHFRgn++) {
-    j = (iHFRgn % (NHFRgns));
-    et = hfETLUT[hfET[iHFRgn]][j];
-    if(et > MinHFETCutForHT) hfHT += et;
-    if(hfHT > 0xFFFF) hfHT = 0xFFFF;
-  }
-  sum = rgnHT + hfHT;
-  if(sum > 0xFFFF) sum = 0xFFFF;
-  HT[0] = (uint10_t) sum;
-  HT[1] = (uint10_t) rgnHT;
-  HT[2] = (uint10_t) hfHT;
-
-  // Determine HT using hardware simulation
-
-  MakeHT(rgnET, hfET, hlsHT);
-
-  // Compare
-
-  printf("C says: HT = %d; HLS says: HT = %d\n", HT[0], hlsHT[0]);
-  printf("C says: rgnHT = %d; HLS says: rgnHT = %d\n", HT[1], hlsHT[1]);
-  printf("C says: hfHT = %d; HLS says: hfHT = %d\n", HT[2], hlsHT[2]);
-  if(HT[0] != hlsHT[0]) {
-    printf("Test failed\n");
-    return 1;
-  }
-  else printf("Test succeeded\n");
-
-  writeOutputFile(hlsHT);
-
-  WriteLinkMapHT(rgnET, hfET, hlsHT);
-
   return 0;
 
 }
