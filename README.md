@@ -14,8 +14,8 @@ Testing on a Mac or Linux system:
 
 ```bash
  cd HT
- cc -o TestMakeHT *.c
- ./TestMakeHT
+ c++ -o TestMakeHT TestMakeHT.cpp MakeHT.cc
+ ./TestMakeHT --random
 ```
 
 ```bash
