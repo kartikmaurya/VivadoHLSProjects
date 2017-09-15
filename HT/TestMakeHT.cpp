@@ -303,7 +303,13 @@ int main(int argc, char **argv) {
 
   bool last = false;
 
-  // Event loop - 170 events maximum can be written out
+#ifdef Vivado
+  printf("Running in Vivado environment\n");
+#else
+  printf("Using: #define uint10_t uint16_t\n");
+#endif
+
+// Event loop - 170 events maximum can be written out
 
   for(event = 0; event < 170; event++) {
     
