@@ -17,7 +17,9 @@ bool writeLinkMapHT(uint10_t rgnET[NCrts*NCrds*NRgns], uint10_t hfET[NCrts*NHFRg
   for(iHFRgn = 0; iHFRgn < NCrts * NHFRgns; iHFRgn++) {
     fprintf(f1, "hfET_%d : IN STD_LOGIC_VECTOR (15 downto 0);\n", iHFRgn);
   }
-  fprintf(f1, "HT_0 : OUT STD_LOGIC_VECTOR (15 downto 0);\n\n\n");
+  fprintf(f1, "HT_0 : OUT STD_LOGIC_VECTOR (15 downto 0);\n");
+  fprintf(f1, "HT_1 : OUT STD_LOGIC_VECTOR (15 downto 0);\n");
+  fprintf(f1, "HT_2 : OUT STD_LOGIC_VECTOR (15 downto 0);\n\n\n");
   // Block 2
   for(iRgn = 0; iRgn < NCrts*NCrds*NRgns; iRgn++) {
     fprintf(f1, "signal rgnET_%d : STD_LOGIC_VECTOR(15 DOWNTO 0);\n", iRgn);
@@ -25,7 +27,9 @@ bool writeLinkMapHT(uint10_t rgnET[NCrts*NCrds*NRgns], uint10_t hfET[NCrts*NHFRg
   for(iHFRgn = 0; iHFRgn < NCrts * NHFRgns; iHFRgn++) {
     fprintf(f1, "signal hfET_%d : STD_LOGIC_VECTOR(15 DOWNTO 0);\n", iHFRgn);
   }
-  fprintf(f1, "signal HT_0 : STD_LOGIC_VECTOR (15 downto 0);\n\n\n");
+  fprintf(f1, "signal HT_0 : STD_LOGIC_VECTOR (15 downto 0);\n");
+  fprintf(f1, "signal HT_1 : STD_LOGIC_VECTOR (15 downto 0);\n");
+  fprintf(f1, "signal HT_2 : STD_LOGIC_VECTOR (15 downto 0);\n\n\n");
   // Block 3
   for(iRgn = 0; iRgn < NCrts*NCrds*NRgns; iRgn++) {
     fprintf(f1, "rgnET_%d => rgnET_%d,\n", iRgn, iRgn);
@@ -33,7 +37,9 @@ bool writeLinkMapHT(uint10_t rgnET[NCrts*NCrds*NRgns], uint10_t hfET[NCrts*NHFRg
   for(iHFRgn = 0; iHFRgn < NCrts * NHFRgns; iHFRgn++) {
     fprintf(f1, "hfET_%d => hfET_%d,\n", iHFRgn, iHFRgn);
   }
-  fprintf(f1, "HT_0 => HT_0,\n\n\n");
+  fprintf(f1, "HT_0 => HT_0,\n");
+  fprintf(f1, "HT_1 => HT_1,\n");
+  fprintf(f1, "HT_2 => HT_2,\n\n\n");
   // Block 4
   for(iRgn = 0; iRgn < NCrts*NCrds*NRgns; iRgn++) {
     // Each link can carry 192-bits, or 12x16-bits of data

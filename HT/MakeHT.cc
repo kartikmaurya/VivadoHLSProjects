@@ -4,6 +4,7 @@
 
 void MakeHT(uint10_t rgnET[NCrts*NCrds*NRgns], uint10_t hfET[NCrts*NHFRgns], uint10_t HT[3]) {
 #pragma HLS PIPELINE II=6
+#pragma HLS INTERFACE ap_none port=algo_out
 #pragma HLS ARRAY_PARTITION variable=rgnET complete dim=0
 #pragma HLS ARRAY_PARTITION variable=hfET complete dim=0
 #pragma HLS ARRAY_PARTITION variable=HT complete dim=0
