@@ -14,6 +14,8 @@ Testing on a Mac or Linux system:
 
 ```bash
  cd HT
+ c++ -o genLUTs genLUTs.cpp
+ ./genLUTs >> LUTs.h
  c++ -o TestMakeHT TestMakeHT.cpp MakeHT.cc
  ./TestMakeHT --random
 ```
