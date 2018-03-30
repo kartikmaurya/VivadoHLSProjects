@@ -19,17 +19,43 @@ bool getClustersInTower(uint16_t crystals[NCrystalsPerEtaPhi][NCrystalsPerEtaPhi
 			uint16_t *peakEta,
 			uint16_t *peakPhi,
 			uint16_t *largeClusterET,
-			uint16_t *smallClusterET);
+			uint16_t *smallClusterET,
+			uint16_t *clusterET2x5,
+			uint16_t *iso10x15ET);
 
-bool mergeClusters(uint16_t ieta1, uint16_t iphi1, uint16_t itet1, uint16_t icet1,
-		   uint16_t ieta2, uint16_t iphi2, uint16_t itet2, uint16_t icet2,
-		   uint16_t *eta1, uint16_t *phi1, uint16_t *tet1, uint16_t *cet1,
-		   uint16_t *eta2, uint16_t *phi2, uint16_t *tet2, uint16_t *cet2);
+bool mergeClusters(uint16_t ieta1, uint16_t iphi1, uint16_t itet1, uint16_t icet1, uint16_t ipet1,
+		   uint16_t ieta2, uint16_t iphi2, uint16_t itet2, uint16_t icet2,  uint16_t ipet2,
+		   uint16_t *eta1, uint16_t *phi1, uint16_t *tet1, uint16_t *cet1, uint16_t *pet1,
+		   uint16_t *eta2, uint16_t *phi2, uint16_t *tet2, uint16_t *cet2, uint16_t *pet2);
 
 bool getClustersInCard(uint16_t crystals[NCaloLayer1Eta][NCaloLayer1Phi][NCrystalsPerEtaPhi][NCrystalsPerEtaPhi],		       
 		       uint16_t peakEta[NCaloLayer1Eta][NCaloLayer1Phi],
 		       uint16_t peakPhi[NCaloLayer1Eta][NCaloLayer1Phi],
 		       uint16_t largeClusterET[NCaloLayer1Eta][NCaloLayer1Phi],
-		       uint16_t smallClusterET[NCaloLayer1Eta][NCaloLayer1Phi]);
+		       uint16_t smallClusterET[NCaloLayer1Eta][NCaloLayer1Phi],
+			   uint16_t clusterET2x5[NCaloLayer1Eta][NCaloLayer1Phi],
+			   uint16_t iso10x15ET[NCaloLayer1Eta][NCaloLayer1Phi]);
+
+uint16_t biggerLR(uint16_t clusterETL, uint16_t clusterETR);
+uint16_t iso10x15biggerLR(uint16_t iso10x15ETL, uint16_t iso10x15ETR);
+//bool isolation9x15(uint16_t crystals[NCrystalsPerEtaPhi][NCrystalsPerEtaPhi],
+//		           uint16_t *iso9x15ET,
+//                  uint16_t *peakEta,
+//		           uint16_t *peakPhi);
+
+bool isolation10x15(uint16_t crystals[NCrystalsPerEtaPhi][NCrystalsPerEtaPhi],
+		           uint16_t *iso10x15ET,
+                   uint16_t *peakEta,
+		           uint16_t *peakPhi,
+				   uint16_t *towerET);
+
+
+
+
+
+
+
+
 
 #endif
+

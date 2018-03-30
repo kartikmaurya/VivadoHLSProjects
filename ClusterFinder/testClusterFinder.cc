@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
       for(int cEta = 0; cEta < 5; cEta++) {
         for(int cPhi = 0; cPhi < 5; cPhi++) {
           totalDeposited += crystals[tEta][tPhi][cEta][cPhi];
-	}
+	    }
       }
     }
   }
@@ -70,10 +70,12 @@ int main(int argc, char **argv) {
   uint16_t peakPhi[17][4];
   uint16_t largeClusterET[17][4];
   uint16_t smallClusterET[17][4];
+  uint16_t clusterET2x5[17][4];
+  uint16_t iso10x15ET[17][4];
   uint16_t totalCardET = 0;
-  if(getClustersInCard(crystals, peakEta, peakPhi, largeClusterET, smallClusterET)) {
+  if(getClustersInCard(crystals, peakEta, peakPhi, largeClusterET, smallClusterET, clusterET2x5, iso10x15ET)) {
     cout << "From the simulation: " << endl;
-    cout << "tEta\ttPhi\tpeakEta\tpeakPhi\tlargeClusterET\tsmallClusterET" << endl;
+    cout << "tEta\tPhi\tpeakEta\tpeakPhi\tlargeClusterET\tsmallClusterET\tclusterET2x5\tiso10x15ET" << endl;
     for(int tEta = 0; tEta < 17; tEta++) {
       for(int tPhi = 0; tPhi < 4; tPhi++) {
         if(largeClusterET[tEta][tPhi] > 0) 
@@ -82,7 +84,9 @@ int main(int argc, char **argv) {
                << "\t" << peakEta[tEta][tPhi]
                << "\t" << peakPhi[tEta][tPhi]
                << "\t" << largeClusterET[tEta][tPhi]
-               << "\t" << smallClusterET[tEta][tPhi] << endl;
+               << "\t" << smallClusterET[tEta][tPhi]
+			   << "\t" << clusterET2x5[tEta][tPhi]
+               << "\t" << iso10x15ET[tEta][tPhi] << endl;
         totalCardET += largeClusterET[tEta][tPhi];
       }
     }
@@ -90,8 +94,10 @@ int main(int argc, char **argv) {
   }
   else {
     cout << "ClusterFinder failed" << endl;
+    //cout << "Hi dinho"
     return 1;
   }
      
   return 0;
 }
+
